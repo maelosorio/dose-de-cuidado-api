@@ -86,3 +86,14 @@ def cadastrar_medicamento(
     session.commit()
     session.refresh(medicamento)
     return medicamento
+
+
+@app.get("/medicamentos", response_model=list[MedicamentoPublico])
+def listar_medicamentos(
+    usuario: Usuario = Depends(get_usuario_atual),
+    session: Session = Depends(get_session),
+):
+    # Só devolve os medicamentos do usuário logado
+    return session.exec(
+        select(Medicamento).where(Medicamento.usuario_id == usuario.id)
+    ).all()
