@@ -1,4 +1,5 @@
 from contextlib import asynccontextmanager
+from uuid import UUID
 
 from fastapi import Depends, FastAPI, HTTPException
 from pwdlib import PasswordHash
@@ -97,3 +98,27 @@ def listar_medicamentos(
     return session.exec(
         select(Medicamento).where(Medicamento.usuario_id == usuario.id)
     ).all()
+
+
+@app.put("/medicamentos/{medicamento_id}", response_model=MedicamentoPublico)
+def editar_medicamento(
+    medicamento_id: UUID,
+    dados: MedicamentoCriar,
+    usuario: Usuario = Depends(get_usuario_atual),
+    session: Session = Depends(get_session),
+):
+    medicamento = session.get(Medicamento, medicamento_id)
+
+    # Mesma resposta se não existe ou se é de outro usuário
+    if not medicamento or medicamento.usuario_id != usuario.id:
+        raise HTTPException(status_code=404, detail="Medicamento não encontrado")
+
+    medicamento.nome = dados.nome
+    medicamento.dosagem = dados.dosagem
+    medicamento.horarios = dados.horarios
+    medicamento.frequencia = dados.frequencia
+
+    session.add(medicamento)
+    session.commit()
+    session.refresh(medicamento)
+    return medicamento
