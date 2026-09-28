@@ -6,7 +6,7 @@ from sqlmodel import Session, select
 
 from database import criar_tabelas, get_session
 from models import Usuario
-from schemas import UsuarioCriar, UsuarioPublico
+from schemas import UsuarioCriar, UsuarioLogin, UsuarioPublico
 
 senha_hash = PasswordHash.recommended()
 
@@ -43,3 +43,16 @@ def cadastrar_usuario(dados: UsuarioCriar, session: Session = Depends(get_sessio
     session.commit()
     session.refresh(usuario)
     return usuario
+
+
+@app.post("/login")
+def login(dados: UsuarioLogin, session: Session = Depends(get_session)):
+    usuario = session.exec(
+        select(Usuario).where(Usuario.email == dados.email)
+    ).first()
+
+    # Mesma mensagem para e-mail ou senha errados (não revela qual dos dois falhou)
+    if not usuario or not senha_hash.verify(dados.senha, usuario.senha):
+        raise HTTPException(status_code=401, detail="E-mail ou senha inválidos")
+
+    return {"mensagem": "Login realizado com sucesso", "usuario_id": str(usuario.id)}

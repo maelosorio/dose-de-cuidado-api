@@ -9,6 +9,11 @@ class UsuarioCriar(SQLModel):
     senha: str
 
 
+class UsuarioLogin(SQLModel):
+    email: str
+    senha: str
+
+
 class UsuarioPublico(SQLModel):
     id: UUID
     nome: str
