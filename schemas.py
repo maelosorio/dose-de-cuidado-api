@@ -18,3 +18,19 @@ class UsuarioPublico(SQLModel):
     id: UUID
     nome: str
     email: str
+
+
+class MedicamentoCriar(SQLModel):
+    nome: str
+    dosagem: str
+    horarios: str  # exemplo: "08:00,14:00,20:00"
+    frequencia: str
+
+
+class MedicamentoPublico(SQLModel):
+    id: UUID
+    usuario_id: UUID
+    nome: str
+    dosagem: str
+    horarios: str
+    frequencia: str

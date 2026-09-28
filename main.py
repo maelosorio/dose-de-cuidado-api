@@ -4,9 +4,16 @@ from fastapi import Depends, FastAPI, HTTPException
 from pwdlib import PasswordHash
 from sqlmodel import Session, select
 
+from auth import criar_token, get_usuario_atual
 from database import criar_tabelas, get_session
-from models import Usuario
-from schemas import UsuarioCriar, UsuarioLogin, UsuarioPublico
+from models import Medicamento, Usuario
+from schemas import (
+    MedicamentoCriar,
+    MedicamentoPublico,
+    UsuarioCriar,
+    UsuarioLogin,
+    UsuarioPublico,
+)
 
 senha_hash = PasswordHash.recommended()
 
@@ -55,4 +62,27 @@ def login(dados: UsuarioLogin, session: Session = Depends(get_session)):
     if not usuario or not senha_hash.verify(dados.senha, usuario.senha):
         raise HTTPException(status_code=401, detail="E-mail ou senha inválidos")
 
-    return {"mensagem": "Login realizado com sucesso", "usuario_id": str(usuario.id)}
+    return {
+        "mensagem": "Login realizado com sucesso",
+        "access_token": criar_token(usuario.id),
+        "token_type": "bearer",
+    }
+
+
+@app.post("/medicamentos", response_model=MedicamentoPublico, status_code=201)
+def cadastrar_medicamento(
+    dados: MedicamentoCriar,
+    usuario: Usuario = Depends(get_usuario_atual),
+    session: Session = Depends(get_session),
+):
+    medicamento = Medicamento(
+        usuario_id=usuario.id,
+        nome=dados.nome,
+        dosagem=dados.dosagem,
+        horarios=dados.horarios,
+        frequencia=dados.frequencia,
+    )
+    session.add(medicamento)
+    session.commit()
+    session.refresh(medicamento)
+    return medicamento
