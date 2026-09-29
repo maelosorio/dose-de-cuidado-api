@@ -7,8 +7,10 @@ from sqlmodel import Session, select
 
 from auth import criar_token, get_usuario_atual
 from database import criar_tabelas, get_session
-from models import Medicamento, Usuario
+from models import Dose, Medicamento, Usuario
 from schemas import (
+    DoseConfirmar,
+    DosePublico,
     MedicamentoCriar,
     MedicamentoPublico,
     UsuarioCriar,
@@ -137,3 +139,31 @@ def excluir_medicamento(
 
     session.delete(medicamento)
     session.commit()
+
+
+@app.post(
+    "/medicamentos/{medicamento_id}/doses",
+    response_model=DosePublico,
+    status_code=201,
+)
+def confirmar_dose(
+    medicamento_id: UUID,
+    dados: DoseConfirmar,
+    usuario: Usuario = Depends(get_usuario_atual),
+    session: Session = Depends(get_session),
+):
+    medicamento = session.get(Medicamento, medicamento_id)
+
+    if not medicamento or medicamento.usuario_id != usuario.id:
+        raise HTTPException(status_code=404, detail="Medicamento não encontrado")
+
+    dose = Dose(
+        medicamento_id=medicamento_id,
+        data=dados.data,
+        hora=dados.hora,
+        status="concluido",
+    )
+    session.add(dose)
+    session.commit()
+    session.refresh(dose)
+    return dose

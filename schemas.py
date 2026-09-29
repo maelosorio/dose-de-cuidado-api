@@ -1,3 +1,4 @@
+from datetime import date, time
 from uuid import UUID
 
 from sqlmodel import SQLModel
@@ -34,3 +35,16 @@ class MedicamentoPublico(SQLModel):
     dosagem: str
     horarios: str
     frequencia: str
+
+
+class DoseConfirmar(SQLModel):
+    data: date
+    hora: time
+
+
+class DosePublico(SQLModel):
+    id: UUID
+    medicamento_id: UUID
+    data: date
+    hora: time
+    status: str
