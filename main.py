@@ -122,3 +122,18 @@ def editar_medicamento(
     session.commit()
     session.refresh(medicamento)
     return medicamento
+
+
+@app.delete("/medicamentos/{medicamento_id}", status_code=204)
+def excluir_medicamento(
+    medicamento_id: UUID,
+    usuario: Usuario = Depends(get_usuario_atual),
+    session: Session = Depends(get_session),
+):
+    medicamento = session.get(Medicamento, medicamento_id)
+
+    if not medicamento or medicamento.usuario_id != usuario.id:
+        raise HTTPException(status_code=404, detail="Medicamento não encontrado")
+
+    session.delete(medicamento)
+    session.commit()
