@@ -167,3 +167,16 @@ def confirmar_dose(
     session.commit()
     session.refresh(dose)
     return dose
+
+
+@app.get("/historico", response_model=list[DosePublico])
+def listar_historico(
+    usuario: Usuario = Depends(get_usuario_atual),
+    session: Session = Depends(get_session),
+):
+    # Pega só as doses cujos medicamentos são do usuário logado
+    return session.exec(
+        select(Dose)
+        .join(Medicamento)
+        .where(Medicamento.usuario_id == usuario.id)
+    ).all()
